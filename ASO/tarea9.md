@@ -1,4 +1,5 @@
 Jose te dejo el bloque de código que he usado para el script de la tarea 9.
+## EJERCICIO 1  
 ~~~
 #!/bin/bash
 
@@ -91,3 +92,99 @@ while true; do
 	read -p "Pulse 'Enter' para continuar."
 done
 ~~~			
+
+## EJERCICIO 2  
+~~~
+#!/bin/bash
+#~ EJERCICIO 2 DE LA TAREA 9 - ALEJANDRO LAMPREA PÉREZ
+
+
+crear_mv() {
+    while true; do
+        echo "Crear máquina virtual (Debian)"
+        read -p "Nombre de la máquina virtual: " nombre_mv
+        read -p "Cantidad de RAM (en MB): " ram
+        read -p "Tamaño del disco (en GB): " disco
+        read -p "Número de CPUs: " cpu
+        read -p "Red (puente/nat): " red
+
+        ruta_iso="/home/aleserver/Descargas/debian-12.8.0-amd64-netinst.iso"
+
+        if [[ ! -f "$ruta_iso" ]]; then
+            echo "Error: No se encontró la ISO de Debian en $ruta_iso"
+            echo "Asegúrate de que la ISO de Debian esté en la ubicación correcta."
+            return
+        fi
+
+        echo "Creando la máquina virtual $nombre_mv..."
+        virt-install \
+            --name "$nombre_mv" \
+            --ram "$ram" \
+            --vcpus "$cpu" \
+            --disk size="$disco",format=qcow2 \
+            --os-type linux \
+            --os-variant debian11 \
+            --network "$red" \
+            --cdrom "$ruta_iso" \
+            --graphics vnc --noautoconsole
+
+        echo "Máquina virtual creada con éxito."
+        read -p "¿Quieres crear otra máquina virtual? (s/n): " eleccion
+        if [[ $eleccion != "s" ]]; then
+            break
+        fi
+    done
+}
+
+borrar_mv() {
+    while true; do
+        echo "Máquinas virtuales existentes:"
+        virsh list --all
+        read -p "Introduce el nombre de la máquina virtual que quieres eliminar: " nombre_mv
+
+        if virsh list --all | grep -q "$nombre_mv"; then
+            virsh destroy "$nombre_mv" &>/dev/null
+            virsh undefine "$nombre_mv"
+            echo "Máquina virtual $nombre_mv eliminada con éxito."
+        else
+            echo "La máquina virtual $nombre_mv no existe."
+        fi
+
+        read -p "¿Quieres eliminar otra máquina virtual? (s/n): " eleccion
+        if [[ $eleccion != "s" ]]; then
+            break
+        fi
+    done
+}
+
+menu() {
+    while true; do
+        echo "Gestión de Máquinas Virtuales KVM"
+        echo "1) Crear máquina virtual"
+        echo "2) Eliminar máquina virtual"
+        echo "3) Salir"
+        read -p "Elige una opción: " opcion
+
+        case $opcion in
+            1)
+                crear_mv
+                ;;
+            2)
+                borrar_mv
+                ;;
+            3)
+                echo "Saliendo del script..."
+                exit 0
+                ;;
+            *)
+                echo "Opción no válida. Inténtalo de nuevo."
+                ;;
+        esac
+    done
+}
+
+#Ejecutar el menú
+menu 
+~~~  
+
+
